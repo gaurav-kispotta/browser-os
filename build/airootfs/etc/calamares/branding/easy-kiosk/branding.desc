@@ -1,0 +1,25 @@
+---
+componentName: browser-os
+
+strings:
+    productName:         Browser OS
+    shortProductName:    Browser OS
+    shortVersion:        v1.0
+    version:            1.0.0
+    versionedName:      Browser OS v1.0
+    shortVersionedName: Browser OS v1.0
+    productUrl:         https://github.com/yourusername/browser-os
+    supportUrl:         https://github.com/yourusername/browser-os/issues
+    knownIssuesUrl:     https://github.com/yourusername/browser-os/issues
+    releaseNotesUrl:    https://github.com/yourusername/browser-os/releases
+
+slideshow:               "qml"
+
+showSupportUrl:         true
+showKnownIssuesUrl:     true
+showReleaseNotesUrl:    true
+
+requirements:
+    requiredStorage:    10.0
+    requiredRam:        2.0
+    internetCheckUrl:   https://archlinux.org 

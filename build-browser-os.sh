@@ -8,7 +8,7 @@ echo
 # Check for root privileges
 if [ "$EUID" -ne 0 ]; then
   echo "Please run as root"
-  echo "Usage: sudo ./build-BROWSER_OS.sh"
+  echo "Usage: sudo ./build-browser-os.sh"
   exit 1
 fi
 
@@ -34,10 +34,6 @@ mkdir -p "$BUILD_DIR" "$PROJECT_DIR/output"
 # Step 1: Run the main build script to setup the profile
 echo "Step 1: Setting up build profile..."
 "$PROJECT_DIR/scripts/build.sh" setup
-
-# Step 2: Setup BROWSER_OS web app
-echo "Step 2: Setting up BROWSER_OS web application..."
-"$PROJECT_DIR/scripts/setup-BROWSER_OS-app.sh"
 
 # Step 3: Setup Calamares
 echo "Step 3: Setting up Calamares installer..."
