@@ -52,10 +52,10 @@ kitty
 openbox
 xterm
 
-# Browser for kiosk mode
+# Browser for BROWSER_OS mode
 firefox
 
-# Tools for kiosk setup
+# Tools for BROWSER_OS setup
 unclutter
 xdotool
 plymouth

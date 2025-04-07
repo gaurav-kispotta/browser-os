@@ -3,19 +3,19 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-WEB_DIR="$PROJECT_DIR/build/profile/airootfs/var/www/kiosk"
+WEB_DIR="$PROJECT_DIR/build/profile/airootfs/var/www/BROWSER_OS"
 
 # Create web directory
 mkdir -p "$WEB_DIR"
 
-# Create a simple kiosk webpage
+# Create a simple BROWSER_OS webpage
 cat > "$WEB_DIR/index.html" << EOF
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Kiosk</title>
+    <title>Browser OS</title>
     <style>
         body {
             margin: 0;
@@ -53,10 +53,10 @@ cat > "$WEB_DIR/index.html" << EOF
     </style>
 </head>
 <body>
-    <img src="/logo.png" alt="Easy Kiosk Logo" class="logo">
-    <h1>Welcome to Easy Kiosk</h1>
+    <img src="/logo.png" alt="Browser OS Logo" class="logo">
+    <h1>Welcome to Browser OS</h1>
     <div class="content">
-        <p>This is a customized Arch Linux kiosk system.</p>
+        <p>This is a customized Arch Linux BROWSER_OS system.</p>
         <p>Modify this page with your own content.</p>
     </div>
     <div class="time" id="current-time"></div>
@@ -79,12 +79,12 @@ EOF
 mkdir -p "$PROJECT_DIR/build/profile/airootfs/etc/nginx/sites-available/"
 
 # Create a simple web server configuration for nginx
-cat > "$PROJECT_DIR/build/profile/airootfs/etc/nginx/sites-available/kiosk.conf" << EOF
+cat > "$PROJECT_DIR/build/profile/airootfs/etc/nginx/sites-available/BROWSER_OS.conf" << EOF
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
 
-    root /var/www/kiosk;
+    root /var/www/BROWSER_OS;
     index index.html;
 
     location / {
@@ -92,7 +92,7 @@ server {
     }
 
     location /logo.png {
-        alias /etc/easy-kiosk/logo.png;
+        alias /etc/browser-os/logo.png;
     }
 }
 EOF
@@ -103,7 +103,7 @@ mkdir -p "$PROJECT_DIR/build/profile/airootfs/etc/nginx/sites-enabled"
 # Create symbolic link
 cat > "$PROJECT_DIR/build/profile/airootfs/root/setup_nginx.sh" << 'EOF'
 #!/bin/bash
-ln -sf /etc/nginx/sites-available/kiosk.conf /etc/nginx/sites-enabled/
+ln -sf /etc/nginx/sites-available/BROWSER_OS.conf /etc/nginx/sites-enabled/
 systemctl enable nginx
 EOF
 
@@ -116,12 +116,12 @@ fi
 
 # Update customize_airootfs.sh to run nginx setup
 if [ -f "$PROJECT_DIR/build/profile/airootfs/root/customize_airootfs.sh" ]; then
-    sed -i '/\/etc\/easy-kiosk\/scripts\/setup-kiosk.sh/a\\n# Setup nginx\n/root/setup_nginx.sh' "$PROJECT_DIR/build/profile/airootfs/root/customize_airootfs.sh"
+    sed -i '/\/etc\/browser-os\/scripts\/setup-BROWSER_OS.sh/a\\n# Setup nginx\n/root/setup_nginx.sh' "$PROJECT_DIR/build/profile/airootfs/root/customize_airootfs.sh"
 fi
 
 # Update openbox autostart to point to localhost
-if [ -f "$PROJECT_DIR/build/profile/airootfs/etc/easy-kiosk/scripts/setup-kiosk.sh" ]; then
-    sed -i 's|firefox --kiosk http://localhost &|firefox --kiosk http://localhost &|' "$PROJECT_DIR/build/profile/airootfs/etc/easy-kiosk/scripts/setup-kiosk.sh"
+if [ -f "$PROJECT_DIR/build/profile/airootfs/etc/browser-os/scripts/setup-BROWSER_OS.sh" ]; then
+    sed -i 's|firefox --BROWSER_OS http://localhost &|firefox --BROWSER_OS http://localhost &|' "$PROJECT_DIR/build/profile/airootfs/etc/browser-os/scripts/setup-BROWSER_OS.sh"
 fi
 
-echo "Kiosk web app setup complete!" 
+echo "BROWSER_OS web app setup complete!" 

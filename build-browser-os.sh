@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-echo "===== Easy Kiosk Builder ====="
-echo "This script will build a custom Arch Linux kiosk ISO."
+echo "===== Browser OS Builder ====="
+echo "This script will build a custom Arch Linux BROWSER_OS ISO."
 echo
 
 # Check for root privileges
 if [ "$EUID" -ne 0 ]; then
   echo "Please run as root"
-  echo "Usage: sudo ./build-kiosk.sh"
+  echo "Usage: sudo ./build-BROWSER_OS.sh"
   exit 1
 fi
 
@@ -35,9 +35,9 @@ mkdir -p "$BUILD_DIR" "$PROJECT_DIR/output"
 echo "Step 1: Setting up build profile..."
 "$PROJECT_DIR/scripts/build.sh" setup
 
-# Step 2: Setup kiosk web app
-echo "Step 2: Setting up kiosk web application..."
-"$PROJECT_DIR/scripts/setup-kiosk-app.sh"
+# Step 2: Setup BROWSER_OS web app
+echo "Step 2: Setting up BROWSER_OS web application..."
+"$PROJECT_DIR/scripts/setup-BROWSER_OS-app.sh"
 
 # Step 3: Setup Calamares
 echo "Step 3: Setting up Calamares installer..."
@@ -76,11 +76,11 @@ fi
 
 echo
 echo "===== Build Complete ====="
-echo "Your custom Easy Kiosk ISO is available in the output/ directory."
+echo "Your custom Browser OS ISO is available in the output/ directory."
 echo "You can verify the ISO with: sha256sum -c output/*.iso.sha256"
 echo
 echo "To burn this ISO to a USB drive:"
 echo "  sudo dd if=$ISO_FILE of=/dev/sdX bs=4M status=progress"
 echo "  (Replace /dev/sdX with your USB device)"
 echo
-echo "Thank you for using Easy Kiosk Builder!" 
+echo "Thank you for using Browser OS Builder!" 

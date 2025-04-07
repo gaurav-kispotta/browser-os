@@ -1,15 +1,15 @@
-# Easy Kiosk - Custom Arch Linux OS
+# Browser OS - Minimal Arch Linux for Browsing
 
-A customized Arch Linux distribution designed for kiosk applications with custom branding.
+A minimal Arch Linux distribution designed to boot directly into Mozilla Browser and nothing else.
 
 ## Overview
 
-This project creates a minimal, secure Arch Linux-based operating system tailored for kiosk displays. It features:
+Browser OS is a lightweight, secure operating system tailored for single-purpose browsing environments. It features:
 
-- Automatic boot to a fullscreen browser application
-- Custom branding and splash screens
-- Locked-down environment with restricted user access
-- Optimized for performance and reliability
+- Automatic boot into Mozilla Browser in fullscreen mode
+- Minimal system footprint for fast boot times
+- Locked-down environment with no additional applications or user access
+- Optimized for simplicity and reliability
 
 ## Project Structure
 
@@ -42,11 +42,10 @@ The final ISO will be generated in the `output/` directory.
 
 Edit the configuration files in the `config/` directory to customize:
 
-- Installed packages
+- Installed packages (e.g., Mozilla Browser)
 - System settings
-- Kiosk browser application
-- Autologin and autostart behavior
+- Autologin and fullscreen browser behavior
 
 ## License
 
-MIT 
+MIT

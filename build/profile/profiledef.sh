@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-iso_name="easy-kiosk"
-iso_label="EASY_KIOSK"
-iso_publisher="Easy Kiosk"
-iso_application="Easy Kiosk Live/Rescue CD"
+iso_name="browser-os"
+iso_label="BROWSER_OS"
+iso_publisher="Browser OS"
+iso_application="Browser OS Live/Rescue CD"
 iso_version=$(date +%Y.%m.%d)
 install_dir="arch"
 buildmodes=('iso')

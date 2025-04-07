@@ -9,8 +9,8 @@ echo "Running customize_airootfs.sh"
 
 # Set root password
 echo "root:root" | chpasswd
-# Set up the kiosk user
-echo "kiosk:kiosk" | chpasswd
+# Set up the BROWSER_OS user
+echo "BROWSER_OS:BROWSER_OS" | chpasswd
 
 # Update the plymouth theme in plymouth.conf file
 sed -i 's/Theme=.*/Theme=browser-os/g' /etc/plymouth/plymouthd.conf

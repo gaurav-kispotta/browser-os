@@ -27,7 +27,7 @@ Presentation
         Text {
             anchors.horizontalCenter: background1.horizontalCenter
             anchors.top: background1.bottom
-            text: "Welcome to Easy Kiosk"
+            text: "Welcome to Browser OS"
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 20
@@ -45,7 +45,7 @@ Presentation
         Text {
             anchors.horizontalCenter: background2.horizontalCenter
             anchors.top: background2.bottom
-            text: "A Custom Arch Linux Distribution for Kiosk Applications"
+            text: "A Custom Arch Linux Distribution for BROWSER_OS Applications"
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 20

@@ -8,8 +8,8 @@ OUTPUT_DIR="$PROJECT_DIR/output"
 CONFIG_DIR="$PROJECT_DIR/config"
 WORK_DIR="$BUILD_DIR/work"
 PROFILE_DIR="$BUILD_DIR/profile"
-ISO_NAME="easy-kiosk"
-ISO_LABEL="EASY_KIOSK"
+ISO_NAME="browser-os"
+ISO_LABEL="BROWSER_OS"
 ISO_VERSION=$(date +%Y.%m.%d)
 ISO_FILENAME="${ISO_NAME}-${ISO_VERSION}-x86_64.iso"
 ARCHISO_PROFILE="releng"
@@ -29,9 +29,9 @@ setup_profile() {
     # Create a basic system configuration
     mkdir -p "$PROFILE_DIR/airootfs/etc"
     cat > "$PROFILE_DIR/airootfs/etc/os-release" << EOF
-NAME="Easy Kiosk"
-PRETTY_NAME="Easy Kiosk"
-ID=easy-kiosk
+NAME="Browser OS"
+PRETTY_NAME="Browser OS"
+ID=browser-os
 BUILD_ID=${ISO_VERSION}
 ANSI_COLOR="0;36"
 HOME_URL="https://example.com"

@@ -1,17 +1,17 @@
 ---
-componentName: easy-kiosk
+componentName: browser-os
 
 strings:
-    productName:         Easy Kiosk
-    shortProductName:    Easy Kiosk
+    productName:         Browser OS
+    shortProductName:    Browser OS
     shortVersion:        v1.0
     version:            1.0.0
-    versionedName:      Easy Kiosk v1.0
-    shortVersionedName: Easy Kiosk v1.0
-    productUrl:         https://github.com/yourusername/easy-kiosk
-    supportUrl:         https://github.com/yourusername/easy-kiosk/issues
-    knownIssuesUrl:     https://github.com/yourusername/easy-kiosk/issues
-    releaseNotesUrl:    https://github.com/yourusername/easy-kiosk/releases
+    versionedName:      Browser OS v1.0
+    shortVersionedName: Browser OS v1.0
+    productUrl:         https://github.com/yourusername/browser-os
+    supportUrl:         https://github.com/yourusername/browser-os/issues
+    knownIssuesUrl:     https://github.com/yourusername/browser-os/issues
+    releaseNotesUrl:    https://github.com/yourusername/browser-os/releases
 
 slideshow:               "qml"
 

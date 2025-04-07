@@ -10,9 +10,9 @@ clear
 
 # Display welcome message
 echo -e "${GREEN}========================================${NC}"
-echo -e "${BLUE}Welcome to Easy Kiosk!${NC}"
+echo -e "${BLUE}Welcome to Browser OS!${NC}"
 echo -e "${GREEN}========================================${NC}"
-echo -e "\nStarting your kiosk session..."
+echo -e "\nStarting your BROWSER_OS session..."
 echo -e "Please wait while we initialize the system...\n"
 
 # Add a small delay to make the message visible
