@@ -1,0 +1,73 @@
+[Plymouth Theme]
+Name=browser-os
+Description=A theme for browser os
+ModuleName=two-step
+
+[two-step]
+Font=Cantarell 12
+TitleFont=Cantarell Light 16
+ImageDir=/usr/share/plymouth/themes/browser-os
+DialogHorizontalAlignment=.5
+DialogVerticalAlignment=.150
+TitleHorizontalAlignment=.5
+TitleVerticalAlignment=.200
+HorizontalAlignment=.5
+VerticalAlignment=.7
+WatermarkHorizontalAlignment=.5
+WatermarkVerticalAlignment=.5
+Transition=none
+TransitionDuration=0.0
+BackgroundStartColor=0x000000
+BackgroundEndColor=0x000000
+ProgressBarBackgroundColor=0x000000
+ProgressBarForegroundColor=0x000000
+MessageBelowAnimation=true
+TextColor=0x000000
+TitleColor=0x000000
+DialogTextColor=0x000000
+DialogSubTextColor=0x000000
+MessageTextColor=0x000000
+ShowConsoleMessage=true
+ConsoleLogMode=true
+DeviceTimeout=5
+KeyboardInterrupt=true
+
+[boot-up]
+UseEndAnimation=true
+Title=Booting up...
+AllowESCInterrupt=true
+
+[shutdown]
+UseEndAnimation=true
+Title=Shutting down...
+
+[reboot]
+UseEndAnimation=true
+
+[updates]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Installing Updates...
+SubTitle=Do not turn off your computer
+
+[system-upgrade]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Upgrading System...
+SubTitle=Do not turn off your computer
+
+[firmware-upgrade]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Upgrading Firmware...
+SubTitle=Do not turn off your computer
+
+[system-reset]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Resetting System...
+SubTitle=Do not turn off your computer

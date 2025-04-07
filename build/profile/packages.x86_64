@@ -1,0 +1,78 @@
+# Base packages
+base
+base-devel
+linux
+linux-firmware
+systemd
+systemd-sysvcompat
+syslinux
+squashfs-tools
+mkinitcpio
+mkinitcpio-archiso
+xz
+e2fsprogs
+dosfstools
+iproute2
+iputils
+archlinux-keyring
+dhcpcd
+netctl
+wpa_supplicant
+iw
+networkmanager
+nano
+openssh
+sudo
+vim
+
+# Boot-related
+syslinux
+grub
+efibootmgr
+
+# System utilities
+htop
+wget
+curl
+git
+rsync
+nginx
+
+# Wayland and display server
+wayland
+sway
+swaybg
+swayidle
+swaylock
+waybar
+dmenu
+kitty
+
+# Display manager and window manager
+openbox
+xterm
+
+# Browser for kiosk mode
+firefox
+
+# Tools for kiosk setup
+unclutter
+xdotool
+plymouth
+
+archiso
+base
+linux
+linux-firmware
+systemd
+systemd-sysvcompat
+syslinux
+squashfs-tools
+mkinitcpio
+mkinitcpio-archiso
+xz
+e2fsprogs
+dosfstools
+iproute2
+iputils
+archlinux-keyring

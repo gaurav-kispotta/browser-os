@@ -1,0 +1,19 @@
+[Unit]
+Description=Show Plymouth Boot Screen
+DefaultDependencies=no
+Before=splash.service
+After=rc-local.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/plymouthd
+ExecStartPost=/bin/plymouth --show-splash --mode=boot --debug --debug-file=/tmp/plymouth-debug.log
+ExecStop=/bin/true
+TimeoutSec=0
+
+# Ensures the service remains active after the ExecStart commands complete,
+# which is necessary for Plymouth to keep the splash screen visible.
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical.target

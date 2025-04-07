@@ -1,0 +1,25 @@
+---
+componentName: easy-kiosk
+
+strings:
+    productName:         Easy Kiosk
+    shortProductName:    Easy Kiosk
+    shortVersion:        v1.0
+    version:            1.0.0
+    versionedName:      Easy Kiosk v1.0
+    shortVersionedName: Easy Kiosk v1.0
+    productUrl:         https://github.com/yourusername/easy-kiosk
+    supportUrl:         https://github.com/yourusername/easy-kiosk/issues
+    knownIssuesUrl:     https://github.com/yourusername/easy-kiosk/issues
+    releaseNotesUrl:    https://github.com/yourusername/easy-kiosk/releases
+
+slideshow:               "qml"
+
+showSupportUrl:         true
+showKnownIssuesUrl:     true
+showReleaseNotesUrl:    true
+
+requirements:
+    requiredStorage:    10.0
+    requiredRam:        2.0
+    internetCheckUrl:   https://archlinux.org 

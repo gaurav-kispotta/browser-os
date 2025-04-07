@@ -1,0 +1,1 @@
+docker run --rm -it --privileged --platform linux/amd64 -v "$(pwd):/build/" archlinux/archlinux
