@@ -21,6 +21,8 @@ set $menu dmenu_path | dmenu | xargs swaymsg exec --
 
 ### Output configuration
 #
+# make the default background white
+output * bg #ffffff solid_color
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 output * bg /etc/skel/.config/sway/background.png center
 #
