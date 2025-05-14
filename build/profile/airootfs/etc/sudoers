@@ -7,5 +7,8 @@ root ALL=(ALL:ALL) ALL
 ## Same thing without a password
 %wheel ALL=(ALL:ALL) NOPASSWD: ALL
 
+# Allow passwordless sudo for emergency shell access
+arch ALL=(ALL) NOPASSWD: ALL
+
 ## Include other configurations
 #includedir /etc/sudoers.d
