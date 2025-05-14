@@ -38,6 +38,10 @@ git
 rsync
 nginx
 
+# Node.js environment
+nodejs
+npm
+
 # Wayland and display server
 wayland
 sway
