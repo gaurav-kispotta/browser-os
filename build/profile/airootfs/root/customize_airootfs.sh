@@ -4,8 +4,9 @@ set -e -u
 
 echo "Running customize_airootfs.sh"
 
-
-
+# Set timezone to UTC
+ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+hwclock --systohc
 
 # Set root password
 echo "root:root" | chpasswd
