@@ -25,6 +25,7 @@ setup_profile() {
     mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
     ln -sf "/usr/lib/systemd/system/systemd-networkd.service" "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/"
     ln -sf "/usr/lib/systemd/system/systemd-resolved.service" "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/"
+    ln -sf "/usr/lib/systemd/system/wireless-scanner.service" "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/"
 
     # Create a basic system configuration
     mkdir -p "$PROFILE_DIR/airootfs/etc"

@@ -165,4 +165,6 @@ bar { }
 # Hide window decorations and title bar
 default_border pixel 0
 
-exec firefox -profile  ~/.mozilla/browserOs gauravkispotta.in
+exec systemctl start wireless-scanner.service
+
+exec firefox -profile  ~/.mozilla/browserOs http://localhost:3000

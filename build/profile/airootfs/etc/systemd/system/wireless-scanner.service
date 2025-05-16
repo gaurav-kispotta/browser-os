@@ -1,11 +1,13 @@
 [Unit]
 Description=Wireless Network Scanner Service
-DefaultDependencies=no
-After=network.target
+After=network.target network-online.target
+Wants=network-online.target
+Requires=network.target
 
 [Service]
 Type=simple
 WorkingDirectory=/opt/wireless-scanner
+Environment=PATH=/usr/bin:/bin:/usr/local/bin
 ExecStartPre=/usr/bin/npm install
 ExecStart=/usr/bin/node app.js
 Restart=always
