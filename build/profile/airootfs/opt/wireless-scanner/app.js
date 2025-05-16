@@ -31,7 +31,7 @@ function parseIwlistOutput(output) {
 }
 
 app.get('/scan', (req, res) => {
-    exec('iwlist wlan0 scan', (error, stdout, stderr) => {
+    exec('sudo iwlist wlan0 scan', (error, stdout, stderr) => {
         if (error) {
             console.error('Error scanning networks:', error);
             res.status(500).json({ error: 'Failed to scan networks' });

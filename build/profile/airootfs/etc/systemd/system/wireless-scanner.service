@@ -1,5 +1,6 @@
 [Unit]
 Description=Wireless Network Scanner Service
+DefaultDependencies=no
 After=network.target
 
 [Service]
@@ -9,6 +10,7 @@ ExecStartPre=/usr/bin/npm install
 ExecStart=/usr/bin/node app.js
 Restart=always
 User=root
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

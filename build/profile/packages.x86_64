@@ -80,3 +80,4 @@ dosfstools
 iproute2
 iputils
 archlinux-keyring
+wireless_tools
