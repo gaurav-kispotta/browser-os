@@ -1,3 +1,4 @@
 build/work/
 output/
 .DS_Store
+build/profile/airootfs/opt/wireless-scanner/node_modules/*
