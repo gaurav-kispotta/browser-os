@@ -18,8 +18,7 @@ echo -e "Please wait while we initialize the system...\n"
 # Add a small delay to make the message visible
 sleep 2
 
-exec systemctl enable NetworkManager.service
-exec systemctl start NetworkManager.service
+
 
 # Start sway
 exec sway

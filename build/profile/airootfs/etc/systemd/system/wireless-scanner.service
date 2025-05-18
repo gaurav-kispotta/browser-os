@@ -9,7 +9,7 @@ Type=simple
 WorkingDirectory=/opt/wireless-scanner
 Environment=PATH=/usr/bin:/bin:/usr/local/bin
 ExecStartPre=/usr/bin/npm install
-ExecStart=/usr/bin/node app.js
+ExecStart=/usr/bin/npm run start
 Restart=always
 User=root
 RemainAfterExit=yes

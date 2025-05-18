@@ -1,14 +1,35 @@
 {
-  "name": "wireless-scanner",
-  "version": "1.0.0",
-  "description": "Wireless network scanner for Browser OS",
-  "main": "app.js",
+  "name": "browser-os-client-agent",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node app.js"
+    "register-browser-agent": "curl -X POST http://192.168.1.2:3000/api/register-browser -o browser-agent-token.json || true",
+    "dev": "npm run register-browser-agent; cp .env.production .env && next dev --turbopack",
+    "dev:test": "npm run register-browser-agent; cp .env.test .env && next dev --turbopack",
+    "build": "next build",
+    "build:test": "cp .env.test .env && next build",
+    "start": "npm run register-browser-agent; next start",
+    "start:test": "npm run register-browser-agent; cp .env.test .env && next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "node-wifi": "^2.0.16"
+    "@ant-design/nextjs-registry": "^1.0.2",
+    "antd": "^5.25.1",
+    "dotenv": "^16.5.0",
+    "next": "15.3.2",
+    "node-wifi": "^2.0.16",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
