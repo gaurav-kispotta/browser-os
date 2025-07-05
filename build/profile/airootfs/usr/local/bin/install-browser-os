@@ -1,0 +1,373 @@
+#!/usr/bin/env bash
+#
+# Browser OS Installation Script
+# This script installs Browser OS to a selected disk
+
+set -e
+
+# Default configuration
+DEFAULT_HOSTNAME="browser-os"
+DEFAULT_USERNAME="BROWSER_OS"
+DEFAULT_PASSWORD="BROWSER_OS"
+DEFAULT_TIMEZONE="UTC"
+DEFAULT_LOCALE="en_US.UTF-8"
+DEFAULT_KEYMAP="us"
+
+# Required tools for the installation
+REQUIRED_TOOLS=(
+    "parted"        # For disk partitioning
+    "mkfs.fat"      # For formatting EFI partition
+    "mkfs.ext4"     # For formatting root partition
+    "rsync"         # For copying files
+    "arch-chroot"   # For chroot operations
+    "genfstab"      # For generating fstab
+    "grub-install"  # For bootloader installation
+    "lsblk"         # For listing block devices
+)
+
+# Packages to install if missing
+PACKAGES_TO_INSTALL=(
+    "parted"       # Partition manipulation tool
+    "dosfstools"   # For FAT filesystem tools (mkfs.fat)
+    "e2fsprogs"    # For ext4 filesystem tools (mkfs.ext4)
+    "rsync"        # For efficient file copying
+    "arch-install-scripts" # For arch-chroot and genfstab
+    "grub"         # For bootloader
+    "efibootmgr"   # For EFI boot management
+    "util-linux"   # For various utilities
+)
+
+# Colors for prettier output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored messages
+print_message() {
+    local color=$1
+    local message=$2
+    echo -e "${color}${message}${NC}"
+}
+
+# Function to print error messages and exit
+error() {
+    print_message "${RED}" "ERROR: $1"
+    exit 1
+}
+
+# Function to print information messages
+info() {
+    print_message "${BLUE}" "INFO: $1"
+}
+
+# Function to print success messages
+success() {
+    print_message "${GREEN}" "SUCCESS: $1"
+}
+
+# Function to print warning messages
+warning() {
+    print_message "${YELLOW}" "WARNING: $1"
+}
+
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Function to check and install required tools
+check_required_tools() {
+    info "Checking for required tools..."
+    local missing_tools=()
+    local missing_packages=()
+    
+    for tool in "${REQUIRED_TOOLS[@]}"; do
+        if ! command_exists "$tool"; then
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        warning "The following required tools are missing: ${missing_tools[*]}"
+        info "Attempting to install missing tools..."
+        
+        # Update package database
+        pacman -Sy --noconfirm
+        
+        # Install missing packages
+        pacman -S --noconfirm "${PACKAGES_TO_INSTALL[@]}"
+        
+        # Verify tools again
+        local still_missing=()
+        for tool in "${REQUIRED_TOOLS[@]}"; do
+            if ! command_exists "$tool"; then
+                still_missing+=("$tool")
+            fi
+        done
+        
+        if [[ ${#still_missing[@]} -gt 0 ]]; then
+            error "Failed to install the following required tools: ${still_missing[*]}"
+        else
+            success "All required tools are now installed."
+        fi
+    else
+        success "All required tools are already installed."
+    fi
+}
+
+# Function to check if we're booted in UEFI mode
+check_uefi_mode() {
+    if [ -d "/sys/firmware/efi/efivars" ]; then
+        info "UEFI mode detected."
+        return 0
+    else
+        warning "UEFI mode not detected. This script requires UEFI boot mode."
+        warning "If you want to continue anyway (using legacy BIOS boot), press Enter."
+        warning "Otherwise, press Ctrl+C to abort and reboot in UEFI mode."
+        read
+    fi
+}
+
+# Check if script is run as root
+if [ "$(id -u)" -ne 0 ]; then
+    error "This script must be run as root"
+fi
+
+# Check and install required tools
+check_required_tools
+
+# Check if we're in UEFI mode
+check_uefi_mode
+
+# Display welcome message
+clear
+echo "=============================================="
+echo "        Browser OS Installation Script        "
+echo "=============================================="
+echo ""
+echo "This script will install Browser OS on your system."
+echo "It will erase all data on the selected disk!"
+echo ""
+echo "Default settings:"
+echo "  Hostname: $DEFAULT_HOSTNAME"
+echo "  Username: $DEFAULT_USERNAME"
+echo "  Password: $DEFAULT_PASSWORD"
+echo "  Timezone: $DEFAULT_TIMEZONE"
+echo "  Locale: $DEFAULT_LOCALE"
+echo "  Keymap: $DEFAULT_KEYMAP"
+echo ""
+read -p "Press Enter to continue or Ctrl+C to abort... "
+
+# List available disks
+echo ""
+echo "Available disks:"
+lsblk -d -o NAME,SIZE,MODEL | grep -v loop
+echo ""
+
+# Ask for disk selection
+while true; do
+    read -p "Enter the disk to install Browser OS (e.g., sda, nvme0n1): " DISK
+    if [ -z "$DISK" ]; then
+        warning "No disk selected. Please select a disk."
+        continue
+    fi
+    
+    # Check if disk exists
+    if [ ! -b "/dev/$DISK" ]; then
+        warning "Disk /dev/$DISK does not exist. Please select a valid disk."
+        continue
+    fi
+    
+    # Confirm disk selection
+    echo ""
+    lsblk "/dev/$DISK"
+    echo ""
+    read -p "WARNING: All data on /dev/$DISK will be erased! Are you sure? (y/n): " CONFIRM
+    if [ "$CONFIRM" = "y" ]; then
+        break
+    fi
+done
+
+# Create target directory
+TARGET_MNT="/mnt"
+mkdir -p "$TARGET_MNT"
+
+# Unmount any existing mounts on the target
+umount -R "$TARGET_MNT" 2>/dev/null || true
+
+# Partition the disk
+info "Partitioning disk /dev/$DISK..."
+
+# Determine if we're using a NVME drive
+if [[ "$DISK" == nvme* ]]; then
+    PART_PREFIX="p"
+else
+    PART_PREFIX=""
+fi
+
+# Create a new partition table (GPT) with error handling
+info "Creating partition table on /dev/$DISK..."
+if ! parted --script "/dev/$DISK" mklabel gpt; then
+    error "Failed to create GPT partition table on /dev/$DISK"
+fi
+
+info "Creating EFI partition..."
+if ! parted --script "/dev/$DISK" mkpart primary fat32 1MiB 513MiB; then
+    error "Failed to create EFI partition on /dev/$DISK"
+fi
+
+info "Setting boot and ESP flags on EFI partition..."
+if ! parted --script "/dev/$DISK" set 1 boot on; then
+    error "Failed to set boot flag on EFI partition"
+fi
+
+if ! parted --script "/dev/$DISK" set 1 esp on; then
+    error "Failed to set ESP flag on EFI partition"
+fi
+
+info "Creating root partition..."
+if ! parted --script "/dev/$DISK" mkpart primary ext4 513MiB 100%; then
+    error "Failed to create root partition on /dev/$DISK"
+fi
+
+# Print partition table
+info "Partition table created:"
+parted --script "/dev/$DISK" print
+
+# Wait a moment for the kernel to recognize the new partitions
+sleep 2
+
+# Format partitions with error handling
+info "Formatting EFI partition..."
+if ! mkfs.fat -F32 "/dev/${DISK}${PART_PREFIX}1"; then
+    error "Failed to format EFI partition"
+fi
+
+info "Formatting root partition..."
+if ! mkfs.ext4 -F "/dev/${DISK}${PART_PREFIX}2"; then
+    error "Failed to format root partition"
+fi
+
+# Mount partitions with error handling
+info "Mounting root partition..."
+if ! mount "/dev/${DISK}${PART_PREFIX}2" "$TARGET_MNT"; then
+    error "Failed to mount root partition"
+fi
+
+info "Creating boot directory..."
+mkdir -p "$TARGET_MNT/boot"
+
+info "Mounting EFI partition..."
+if ! mount "/dev/${DISK}${PART_PREFIX}1" "$TARGET_MNT/boot"; then
+    error "Failed to mount EFI partition"
+fi
+
+# Copy live system to target with error handling and progress display
+info "Copying live system to target disk (this may take a while)..."
+if ! rsync -a --progress --info=progress2 --exclude '/mnt' --exclude '/proc' --exclude '/sys' --exclude '/tmp' --exclude '/dev' --exclude '/run' / "$TARGET_MNT"; then
+    error "Failed to copy live system to target disk"
+fi
+
+# Create necessary directories
+info "Creating necessary directories..."
+mkdir -p "$TARGET_MNT/proc" "$TARGET_MNT/sys" "$TARGET_MNT/dev" "$TARGET_MNT/run" "$TARGET_MNT/tmp"
+chmod 1777 "$TARGET_MNT/tmp"
+
+# Mount virtual filesystems for chroot
+mount -t proc none "$TARGET_MNT/proc"
+mount -t sysfs none "$TARGET_MNT/sys"
+mount -o bind /dev "$TARGET_MNT/dev"
+mount -o bind /run "$TARGET_MNT/run"
+
+# Set hostname
+echo "$DEFAULT_HOSTNAME" > "$TARGET_MNT/etc/hostname"
+
+# Set locale
+sed -i "s/^#$DEFAULT_LOCALE/$DEFAULT_LOCALE/" "$TARGET_MNT/etc/locale.gen"
+echo "LANG=$DEFAULT_LOCALE" > "$TARGET_MNT/etc/locale.conf"
+
+# Set timezone
+arch-chroot "$TARGET_MNT" ln -sf "/usr/share/zoneinfo/$DEFAULT_TIMEZONE" /etc/localtime
+
+# Generate locales
+arch-chroot "$TARGET_MNT" locale-gen
+
+# Set keymap
+echo "KEYMAP=$DEFAULT_KEYMAP" > "$TARGET_MNT/etc/vconsole.conf"
+
+# Set root password
+echo "root:$DEFAULT_PASSWORD" | arch-chroot "$TARGET_MNT" chpasswd
+
+# Create user if it doesn't already exist
+if ! arch-chroot "$TARGET_MNT" id "$DEFAULT_USERNAME" &>/dev/null; then
+    arch-chroot "$TARGET_MNT" useradd -m -G wheel -s /bin/bash "$DEFAULT_USERNAME"
+fi
+
+# Set user password
+echo "$DEFAULT_USERNAME:$DEFAULT_PASSWORD" | arch-chroot "$TARGET_MNT" chpasswd
+
+# Configure sudo
+if [ ! -f "$TARGET_MNT/etc/sudoers.d/browser-os" ]; then
+    echo "$DEFAULT_USERNAME ALL=(ALL) ALL" > "$TARGET_MNT/etc/sudoers.d/browser-os"
+    chmod 440 "$TARGET_MNT/etc/sudoers.d/browser-os"
+fi
+
+# Install bootloader with error handling
+info "Installing bootloader..."
+if ! arch-chroot "$TARGET_MNT" grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Browser-OS; then
+    error "Failed to install GRUB bootloader"
+fi
+
+info "Generating GRUB configuration..."
+if ! arch-chroot "$TARGET_MNT" grub-mkconfig -o /boot/grub/grub.cfg; then
+    error "Failed to generate GRUB configuration"
+fi
+
+# Enable NetworkManager
+info "Enabling NetworkManager service..."
+if ! arch-chroot "$TARGET_MNT" systemctl enable NetworkManager; then
+    warning "Failed to enable NetworkManager service. Network connectivity may not work after boot."
+fi
+
+# Update fstab
+info "Generating fstab..."
+genfstab -U "$TARGET_MNT" > "$TARGET_MNT/etc/fstab"
+
+# Create autostart file for Firefox kiosk mode
+mkdir -p "$TARGET_MNT/home/$DEFAULT_USERNAME/.config/autostart"
+cat > "$TARGET_MNT/home/$DEFAULT_USERNAME/.config/autostart/firefox-kiosk.desktop" << EOF
+[Desktop Entry]
+Type=Application
+Name=Firefox Kiosk Mode
+Exec=firefox --kiosk http://localhost/browser-os-config
+Terminal=false
+X-GNOME-Autostart-enabled=true
+EOF
+arch-chroot "$TARGET_MNT" chown -R "$DEFAULT_USERNAME:$DEFAULT_USERNAME" "/home/$DEFAULT_USERNAME/.config"
+
+# Unmount virtual filesystems in the correct order
+info "Unmounting filesystems..."
+umount -l "$TARGET_MNT/dev" 2>/dev/null || true
+umount -l "$TARGET_MNT/proc" 2>/dev/null || true
+umount -l "$TARGET_MNT/sys" 2>/dev/null || true
+umount -l "$TARGET_MNT/run" 2>/dev/null || true
+
+# Final unmounting of main partitions
+umount -R "$TARGET_MNT" 2>/dev/null || {
+    warning "Failed to unmount some partitions cleanly. You may need to reboot before using them."
+}
+
+# Sync to ensure all writes are completed
+sync
+
+success "Browser OS has been successfully installed on /dev/$DISK"
+echo ""
+echo "You can now reboot your system and remove the installation media."
+echo "The system will boot into Browser OS automatically."
+echo "Username: $DEFAULT_USERNAME"
+echo "Password: $DEFAULT_PASSWORD"
+echo ""
+echo "Press Enter to continue..."
+read
