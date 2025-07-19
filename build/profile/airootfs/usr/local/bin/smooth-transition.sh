@@ -53,9 +53,23 @@ sleep 4
 
 log_silent "Quitting Plymouth"
 
-# Smoothly quit Plymouth
-systemctl stop plymouth-quit.service >/dev/null 2>&1 || true
-plymouth quit --retain-splash >/dev/null 2>&1 || true
+# Check if Plymouth is running before attempting to quit
+if pgrep -x "plymouth" >/dev/null 2>&1; then
+    # Smoothly quit Plymouth
+    systemctl stop plymouth-quit.service >/dev/null 2>&1 || true
+    plymouth quit --retain-splash >/dev/null 2>&1 || true
+    
+    # Wait a moment for Plymouth to fully exit
+    sleep 1
+    
+    # Force quit if still running
+    if pgrep -x "plymouth" >/dev/null 2>&1; then
+        plymouth quit >/dev/null 2>&1 || true
+        killall plymouth >/dev/null 2>&1 || true
+    fi
+else
+    log_silent "Plymouth not running, skipping quit"
+fi
 
 # Final screen clear
 for tty in /dev/tty{1..6}; do

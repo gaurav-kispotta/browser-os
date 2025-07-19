@@ -1,48 +1,57 @@
-# Base packages
+# ARCHISO packages for Browser OS build
+# Core system packages
+archiso
 base
-base-devel
 linux
 linux-firmware
 systemd
 systemd-sysvcompat
-syslinux
-squashfs-tools
 mkinitcpio
 mkinitcpio-archiso
+
+# File systems and storage
+squashfs-tools
 xz
 e2fsprogs
 dosfstools
+
+# Networking
 iproute2
 iputils
-archlinux-keyring
 dhcpcd
 netctl
 wpa_supplicant
 iw
 networkmanager
-nano
-openssh
-sudo
-vim
+wireless_tools
 
-# Boot-related
+# Boot and installation
 syslinux
 grub
 efibootmgr
+parted
 
 # System utilities
+archlinux-keyring
+nano
+vim
+sudo
+openssh
 htop
 wget
 curl
 git
 rsync
+reflector
+
+# Web server
 nginx
 
 # Node.js environment
 nodejs
 npm
 
-# Wayland and display server
+# Wayland and Sway desktop environment
 wayland
 sway
 swaybg
@@ -52,33 +61,11 @@ waybar
 dmenu
 kitty
 
-# Display manager and window manager
-openbox
-xterm
-
-# Browser for BROWSER_OS mode
-firefox
-
-# Tools for BROWSER_OS setup
-unclutter
-xdotool
+# Plymouth boot splash
 plymouth
 
-archiso
-base
-linux
-linux-firmware
-systemd
-systemd-sysvcompat
-syslinux
-squashfs-tools
-mkinitcpio
-mkinitcpio-archiso
-xz
-e2fsprogs
-dosfstools
-iproute2
-iputils
-archlinux-keyring
-wireless_tools
-parted
+# Firefox browser
+firefox
+
+# Additional utilities for kiosk mode
+unclutter

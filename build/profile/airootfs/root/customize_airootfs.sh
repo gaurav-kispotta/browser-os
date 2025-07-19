@@ -4,6 +4,18 @@ set -e -u
 
 echo "Running customize_airootfs.sh"
 
+# Update package databases and keys first
+echo "==> Updating package databases and keyring..."
+pacman-key --init
+pacman-key --populate archlinux
+pacman -Sy --noconfirm
+
+# Update mirrors for better connectivity
+echo "==> Updating mirror list..."
+if command -v reflector >/dev/null 2>&1; then
+    reflector --protocol https --country "United States,Germany,France,United Kingdom,Netherlands,Canada" --latest 10 --fastest 5 --sort rate --save /etc/pacman.d/mirrorlist
+fi
+
 # Set timezone to UTC
 ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 hwclock --systohc
