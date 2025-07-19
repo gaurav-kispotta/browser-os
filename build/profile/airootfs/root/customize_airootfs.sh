@@ -22,3 +22,22 @@ sed -i 's/Theme=.*/Theme=browser-os/g' /etc/plymouth/plymouthd.conf
 # in the live environment
 sed -i 's/Theme=.*/Theme=browser-os/g' /usr/share/plymouth/plymouthd.defaults
 
+# Make the smooth transition script executable
+chmod +x /usr/local/bin/smooth-transition.sh
+
+# Enable the smooth transition service
+systemctl enable smooth-transition.service
+
+# Disable unnecessary services for smoother boot
+systemctl disable systemd-resolved
+systemctl disable systemd-networkd-wait-online
+
+# Disable console messages
+systemctl mask systemd-ask-password-console.path
+systemctl mask systemd-ask-password-console.service
+systemctl mask systemd-ask-password-wall.path
+systemctl mask systemd-ask-password-wall.service
+
+# Ensure silent boot
+echo "kernel.printk = 0 0 0 0" >> /etc/sysctl.conf
+

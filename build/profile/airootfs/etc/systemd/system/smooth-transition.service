@@ -1,0 +1,17 @@
+[Unit]
+Description=Browser OS Smooth Transition Service
+After=plymouth-start.service
+After=systemd-user-sessions.service
+After=getty@tty1.service
+Wants=plymouth-quit.service
+Before=plymouth-quit.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/smooth-transition.sh
+RemainAfterExit=yes
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

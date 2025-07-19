@@ -21,53 +21,53 @@ BackgroundStartColor=0x000000
 BackgroundEndColor=0x000000
 ProgressBarBackgroundColor=0x000000
 ProgressBarForegroundColor=0x000000
-MessageBelowAnimation=true
+MessageBelowAnimation=false
 TextColor=0x000000
 TitleColor=0x000000
 DialogTextColor=0x000000
 DialogSubTextColor=0x000000
 MessageTextColor=0x000000
-ShowConsoleMessage=true
-ConsoleLogMode=true
+ShowConsoleMessage=false
+ConsoleLogMode=false
 DeviceTimeout=5
-KeyboardInterrupt=true
+KeyboardInterrupt=false
 
 [boot-up]
 UseEndAnimation=true
-Title=Booting up...
-AllowESCInterrupt=true
+Title=
+AllowESCInterrupt=false
 
 [shutdown]
 UseEndAnimation=true
-Title=Shutting down...
+Title=
 
 [reboot]
 UseEndAnimation=true
 
 [updates]
 SuppressMessages=true
-ProgressBarShowPercentComplete=true
-UseProgressBar=true
-Title=Installing Updates...
-SubTitle=Do not turn off your computer
+ProgressBarShowPercentComplete=false
+UseProgressBar=false
+Title=
+SubTitle=
 
 [system-upgrade]
 SuppressMessages=true
-ProgressBarShowPercentComplete=true
-UseProgressBar=true
-Title=Upgrading System...
-SubTitle=Do not turn off your computer
+ProgressBarShowPercentComplete=false
+UseProgressBar=false
+Title=
+SubTitle=
 
 [firmware-upgrade]
 SuppressMessages=true
-ProgressBarShowPercentComplete=true
-UseProgressBar=true
-Title=Upgrading Firmware...
-SubTitle=Do not turn off your computer
+ProgressBarShowPercentComplete=false
+UseProgressBar=false
+Title=
+SubTitle=
 
 [system-reset]
 SuppressMessages=true
-ProgressBarShowPercentComplete=true
-UseProgressBar=true
-Title=Resetting System...
-SubTitle=Do not turn off your computer
+ProgressBarShowPercentComplete=false
+UseProgressBar=false
+Title=
+SubTitle=
