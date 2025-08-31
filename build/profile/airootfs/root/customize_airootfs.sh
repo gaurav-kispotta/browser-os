@@ -22,3 +22,5 @@ sed -i 's/Theme=.*/Theme=browser-os/g' /etc/plymouth/plymouthd.conf
 # in the live environment
 sed -i 's/Theme=.*/Theme=browser-os/g' /usr/share/plymouth/plymouthd.defaults
 
+systemctl disable sway-start.service
+systemctl disable wireless-scanner.service

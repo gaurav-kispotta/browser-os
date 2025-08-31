@@ -281,6 +281,12 @@ mount -t sysfs none "$TARGET_MNT/sys"
 mount -o bind /dev "$TARGET_MNT/dev"
 mount -o bind /run "$TARGET_MNT/run"
 
+# Initialize pacman in the new system
+info "Initializing pacman keyring in target system..."
+arch-chroot "$TARGET_MNT" pacman-key --init
+arch-chroot "$TARGET_MNT" pacman-key --populate archlinux
+arch-chroot "$TARGET_MNT" pacman -Sy --noconfirm
+
 # Set hostname
 echo "$DEFAULT_HOSTNAME" > "$TARGET_MNT/etc/hostname"
 
@@ -293,6 +299,24 @@ arch-chroot "$TARGET_MNT" ln -sf "/usr/share/zoneinfo/$DEFAULT_TIMEZONE" /etc/lo
 
 # Generate locales
 arch-chroot "$TARGET_MNT" locale-gen
+
+# Ensure kernel is properly installed
+info "Verifying kernel installation..."
+if [ ! -f "$TARGET_MNT/boot/vmlinuz-linux" ]; then
+    warning "Kernel not found, reinstalling linux package..."
+    arch-chroot "$TARGET_MNT" pacman -S --noconfirm linux linux-firmware
+fi
+
+# Wait a moment for filesystem sync
+sync
+sleep 2
+
+# Generate initramfs
+info "Generating initramfs..."
+if ! arch-chroot "$TARGET_MNT" mkinitcpio -P; then
+    warning "Failed to generate initramfs with -P, trying with specific preset..."
+    arch-chroot "$TARGET_MNT" mkinitcpio -p linux || warning "initramfs generation failed, system may not boot properly"
+fi
 
 # Set keymap
 echo "KEYMAP=$DEFAULT_KEYMAP" > "$TARGET_MNT/etc/vconsole.conf"
@@ -316,14 +340,51 @@ fi
 
 # Install bootloader with error handling
 info "Installing bootloader..."
-if ! arch-chroot "$TARGET_MNT" grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Browser-OS; then
+if ! arch-chroot "$TARGET_MNT" grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Browser-OS --recheck; then
     error "Failed to install GRUB bootloader"
 fi
+
+# Install additional GRUB modules that might be needed
+info "Installing additional GRUB modules..."
+arch-chroot "$TARGET_MNT" grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Browser-OS --modules="part_gpt part_msdos fat ext2 normal boot linux configfile loopback chain efifwsetup efi_gop efi_uga ls search search_label search_fs_uuid search_fs_file gfxterm gfxterm_background gfxterm_menu test all_video loadenv exfat ntfs" --recheck
+
+# Create a custom GRUB configuration
+info "Creating GRUB configuration..."
+cat > "$TARGET_MNT/etc/default/grub" << 'EOF'
+# GRUB boot loader configuration for Browser OS
+
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="Browser OS"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=0 systemd.show_status=0 rd.systemd.show_status=0 rd.udev.log_level=0"
+GRUB_CMDLINE_LINUX=""
+
+# Preload both GPT and MBR modules so that they are not missed
+GRUB_PRELOAD_MODULES="part_gpt part_msdos fat ext2"
+
+# Enable os-prober to detect other systems
+GRUB_DISABLE_OS_PROBER=false
+
+# Graphics mode
+GRUB_GFXMODE=auto
+GRUB_GFXPAYLOAD_LINUX=keep
+
+# Terminal settings
+GRUB_TERMINAL_INPUT=console
+GRUB_TERMINAL_OUTPUT=gfxterm
+
+# Disable submenu
+GRUB_DISABLE_SUBMENU=y
+EOF
 
 info "Generating GRUB configuration..."
 if ! arch-chroot "$TARGET_MNT" grub-mkconfig -o /boot/grub/grub.cfg; then
     error "Failed to generate GRUB configuration"
 fi
+
+# Create fallback EFI boot entry
+info "Creating fallback EFI boot entry..."
+arch-chroot "$TARGET_MNT" efibootmgr --create --disk "/dev/$DISK" --part 1 --loader /EFI/Browser-OS/grubx64.efi --label "Browser OS" --verbose || warning "Failed to create EFI boot entry"
 
 # Enable NetworkManager
 info "Enabling NetworkManager service..."
@@ -334,6 +395,31 @@ fi
 # Update fstab
 info "Generating fstab..."
 genfstab -U "$TARGET_MNT" > "$TARGET_MNT/etc/fstab"
+
+# Verify bootloader installation
+info "Verifying bootloader installation..."
+if [ ! -f "$TARGET_MNT/boot/EFI/Browser-OS/grubx64.efi" ]; then
+    warning "GRUB EFI file not found at expected location"
+    info "Attempting to reinstall bootloader..."
+    arch-chroot "$TARGET_MNT" grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Browser-OS --recheck --force
+fi
+
+# Verify GRUB configuration exists
+if [ ! -f "$TARGET_MNT/boot/grub/grub.cfg" ]; then
+    warning "GRUB configuration not found, regenerating..."
+    arch-chroot "$TARGET_MNT" grub-mkconfig -o /boot/grub/grub.cfg
+fi
+
+# Display some verification info
+info "Installation verification:"
+echo "  - EFI directory contents:"
+ls -la "$TARGET_MNT/boot/EFI/" || echo "    EFI directory not accessible"
+echo "  - GRUB configuration size:"
+wc -l "$TARGET_MNT/boot/grub/grub.cfg" 2>/dev/null || echo "    GRUB config not found"
+echo "  - Boot partition mount:"
+mount | grep "$TARGET_MNT/boot" || echo "    Boot partition not mounted"
+echo "  - Kernel files:"
+ls -la "$TARGET_MNT/boot/vmlinuz-linux" "$TARGET_MNT/boot/initramfs-linux.img" "$TARGET_MNT/boot/initramfs-linux-fallback.img" 2>/dev/null || echo "    Some kernel files missing"
 
 # Create autostart file for Firefox kiosk mode
 mkdir -p "$TARGET_MNT/home/$DEFAULT_USERNAME/.config/autostart"
