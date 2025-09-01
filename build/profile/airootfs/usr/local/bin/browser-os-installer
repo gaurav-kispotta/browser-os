@@ -1,0 +1,366 @@
+#!/bin/bash
+#
+# Browser OS Dialog-based Installer
+# A minimal GUI CLI installer using dialog for Browser OS
+#
+
+set -e
+
+# Configuration
+DEFAULT_HOSTNAME="browser-os"
+DEFAULT_USERNAME="BROWSER_OS"
+DEFAULT_PASSWORD="BROWSER_OS"
+DEFAULT_TIMEZONE="UTC"
+DEFAULT_LOCALE="en_US.UTF-8"
+DEFAULT_KEYMAP="us"
+
+# Colors for error messages (when not using dialog)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Dialog configuration
+DIALOG_WIDTH=70
+DIALOG_HEIGHT=20
+
+# Temporary files for dialog
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+# Function to show error and exit
+error_exit() {
+    dialog --colors --title "\Z1Error\Zn" --msgbox "\n$1\n\nInstallation aborted." 10 50
+    clear
+    echo -e "${RED}ERROR: $1${NC}" >&2
+    exit 1
+}
+
+# Function to show info message
+info_message() {
+    dialog --colors --title "\Z4Information\Zn" --msgbox "\n$1" 10 50
+}
+
+# Function to show success message
+success_message() {
+    dialog --colors --title "\Z2Success\Zn" --msgbox "\n$1" 10 50
+}
+
+# Function to check root privileges
+check_root() {
+    if [ "$(id -u)" -ne 0 ]; then
+        error_exit "This installer must be run as root.\nPlease run: sudo $0"
+    fi
+}
+
+# Function to check UEFI mode
+check_uefi() {
+    if [ ! -d "/sys/firmware/efi/efivars" ]; then
+        dialog --colors --title "\Z3Warning\Zn" --yesno "\nUEFI mode not detected. This installer is optimized for UEFI systems.\n\nDo you want to continue with BIOS/Legacy boot mode?" 10 60
+        if [ $? -ne 0 ]; then
+            clear
+            echo "Installation cancelled by user."
+            exit 0
+        fi
+    fi
+}
+
+# Function to check and install required tools
+check_tools() {
+    local missing_tools=()
+    local required_tools=("parted" "mkfs.fat" "mkfs.ext4" "rsync" "arch-chroot" "genfstab" "grub-install" "lsblk")
+    
+    for tool in "${required_tools[@]}"; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    if [ ${#missing_tools[@]} -gt 0 ]; then
+        dialog --infobox "Installing required tools...\n\nThis may take a few moments." 6 40
+        pacman -Sy --noconfirm parted dosfstools e2fsprogs rsync arch-install-scripts grub efibootmgr util-linux >/dev/null 2>&1
+    fi
+}
+
+# Function to welcome screen
+welcome_screen() {
+    dialog --colors --title "\Z4Browser OS Installer\Zn" --yesno "\n\Z1Welcome to Browser OS Installer!\Zn\n\nThis installer will guide you through the installation of Browser OS on your system.\n\n\Z3WARNING:\Zn This will erase all data on the selected disk!\n\nDefault Configuration:\n• Hostname: $DEFAULT_HOSTNAME\n• Username: $DEFAULT_USERNAME\n• Password: $DEFAULT_PASSWORD\n• Timezone: $DEFAULT_TIMEZONE\n• Locale: $DEFAULT_LOCALE\n• Keymap: $DEFAULT_KEYMAP\n\nDo you want to proceed with the installation?" 18 65
+    
+    if [ $? -ne 0 ]; then
+        clear
+        echo "Installation cancelled by user."
+        exit 0
+    fi
+}
+
+# Function to select disk
+select_disk() {
+    local disk_list
+    disk_list=$(lsblk -dn -o NAME,SIZE,MODEL | grep -v loop | awk '{printf "%s \"%s %s\" ", $1, $2, $3}')
+    
+    if [ -z "$disk_list" ]; then
+        error_exit "No suitable disks found for installation."
+    fi
+    
+    local selected_disk
+    selected_disk=$(dialog --colors --title "\Z4Disk Selection\Zn" --menu "\nSelect the disk where you want to install Browser OS:\n\n\Z1WARNING: ALL DATA ON SELECTED DISK WILL BE ERASED!\Zn" 16 70 8 $disk_list 2>&1 >/dev/tty)
+    
+    if [ $? -ne 0 ]; then
+        error_exit "No disk selected. Installation cancelled."
+    fi
+    
+    # Show disk details and confirm
+    local disk_info
+    disk_info=$(lsblk "/dev/$selected_disk" 2>/dev/null || echo "Unable to get disk information")
+    
+    dialog --colors --title "\Z4Confirm Disk Selection\Zn" --yesno "\nSelected disk: \Z1/dev/$selected_disk\Zn\n\nDisk details:\n$disk_info\n\n\Z1FINAL WARNING:\Zn\nALL DATA ON THIS DISK WILL BE PERMANENTLY ERASED!\n\nAre you absolutely sure you want to continue?" 16 70
+    
+    if [ $? -ne 0 ]; then
+        error_exit "Disk selection cancelled by user."
+    fi
+    
+    echo "$selected_disk"
+}
+
+# Function to configure system settings
+configure_system() {
+    local temp_file="$TEMP_DIR/config"
+    
+    # Create configuration form
+    dialog --colors --title "\Z4System Configuration\Zn" --form "\nConfigure your Browser OS installation:\n\n(Use Tab to move between fields)" 16 60 8 \
+        "Hostname:" 1 1 "$DEFAULT_HOSTNAME" 1 12 20 30 \
+        "Username:" 2 1 "$DEFAULT_USERNAME" 2 12 20 30 \
+        "Password:" 3 1 "$DEFAULT_PASSWORD" 3 12 20 30 \
+        "Timezone:" 4 1 "$DEFAULT_TIMEZONE" 4 12 20 30 \
+        "Locale:" 5 1 "$DEFAULT_LOCALE" 5 12 20 30 \
+        "Keymap:" 6 1 "$DEFAULT_KEYMAP" 6 12 20 30 2>"$temp_file"
+    
+    if [ $? -ne 0 ]; then
+        error_exit "System configuration cancelled by user."
+    fi
+    
+    # Read configuration from file
+    local config_array
+    mapfile -t config_array < "$temp_file"
+    
+    # Assign values or use defaults
+    HOSTNAME="${config_array[0]:-$DEFAULT_HOSTNAME}"
+    USERNAME="${config_array[1]:-$DEFAULT_USERNAME}"
+    PASSWORD="${config_array[2]:-$DEFAULT_PASSWORD}"
+    TIMEZONE="${config_array[3]:-$DEFAULT_TIMEZONE}"
+    LOCALE="${config_array[4]:-$DEFAULT_LOCALE}"
+    KEYMAP="${config_array[5]:-$DEFAULT_KEYMAP}"
+    
+    # Validate inputs
+    if [ -z "$HOSTNAME" ] || [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
+        error_exit "Hostname, username, and password cannot be empty."
+    fi
+}
+
+# Function to partition disk
+partition_disk() {
+    local disk="$1"
+    
+    dialog --infobox "Partitioning disk /dev/$disk...\n\nThis may take a few moments." 6 40
+    
+    # Determine partition prefix
+    local part_prefix=""
+    if [[ "$disk" == nvme* ]]; then
+        part_prefix="p"
+    fi
+    
+    # Create partition table
+    parted --script "/dev/$disk" mklabel gpt || error_exit "Failed to create partition table"
+    
+    # Create EFI partition (512MB)
+    parted --script "/dev/$disk" mkpart primary fat32 1MiB 513MiB || error_exit "Failed to create EFI partition"
+    parted --script "/dev/$disk" set 1 boot on || error_exit "Failed to set boot flag"
+    parted --script "/dev/$disk" set 1 esp on || error_exit "Failed to set ESP flag"
+    
+    # Create root partition (remaining space)
+    parted --script "/dev/$disk" mkpart primary ext4 513MiB 100% || error_exit "Failed to create root partition"
+    
+    # Wait for kernel to recognize partitions
+    sleep 2
+    
+    # Format partitions
+    dialog --infobox "Formatting partitions...\n\nThis may take a few moments." 6 40
+    
+    mkfs.fat -F32 "/dev/${disk}${part_prefix}1" || error_exit "Failed to format EFI partition"
+    mkfs.ext4 -F "/dev/${disk}${part_prefix}2" || error_exit "Failed to format root partition"
+    
+    echo "${disk}${part_prefix}"
+}
+
+# Function to install system
+install_system() {
+    local disk_prefix="$1"
+    local target="/mnt"
+    
+    # Progress tracking
+    local total_steps=8
+    local current_step=0
+    
+    # Mount filesystems
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Mounting filesystems..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    mkdir -p "$target"
+    umount -R "$target" 2>/dev/null || true
+    
+    mount "/dev/${disk_prefix}2" "$target" || error_exit "Failed to mount root partition"
+    mkdir -p "$target/boot"
+    mount "/dev/${disk_prefix}1" "$target/boot" || error_exit "Failed to mount EFI partition"
+    
+    # Copy system
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Copying system files..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    rsync -a --info=progress2 --exclude '/mnt' --exclude '/proc' --exclude '/sys' --exclude '/tmp' --exclude '/dev' --exclude '/run' / "$target" || error_exit "Failed to copy system files"
+    
+    # Create necessary directories
+    mkdir -p "$target"/{proc,sys,dev,run,tmp}
+    chmod 1777 "$target/tmp"
+    
+    # Mount virtual filesystems
+    mount -t proc none "$target/proc"
+    mount -t sysfs none "$target/sys"
+    mount -o bind /dev "$target/dev"
+    mount -o bind /run "$target/run"
+    
+    # Configure system
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Configuring system..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    # Set hostname
+    echo "$HOSTNAME" > "$target/etc/hostname"
+    
+    # Configure locale
+    sed -i "s/^#$LOCALE/$LOCALE/" "$target/etc/locale.gen"
+    echo "LANG=$LOCALE" > "$target/etc/locale.conf"
+    arch-chroot "$target" locale-gen
+    
+    # Set timezone
+    arch-chroot "$target" ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+    
+    # Set keymap
+    echo "KEYMAP=$KEYMAP" > "$target/etc/vconsole.conf"
+    
+    # Configure users
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Configuring users..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    # Set root password
+    echo "root:$PASSWORD" | arch-chroot "$target" chpasswd
+    
+    # Create user
+    arch-chroot "$target" useradd -m -G wheel -s /bin/bash "$USERNAME" 2>/dev/null || true
+    echo "$USERNAME:$PASSWORD" | arch-chroot "$target" chpasswd
+    
+    # Configure sudo
+    echo "$USERNAME ALL=(ALL) ALL" > "$target/etc/sudoers.d/browser-os"
+    chmod 440 "$target/etc/sudoers.d/browser-os"
+    
+    # Initialize pacman
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Initializing package manager..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    arch-chroot "$target" pacman-key --init >/dev/null 2>&1
+    arch-chroot "$target" pacman-key --populate archlinux >/dev/null 2>&1
+    
+    # Generate initramfs
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Generating initial ramdisk..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    arch-chroot "$target" mkinitcpio -P >/dev/null 2>&1 || arch-chroot "$target" mkinitcpio -p linux >/dev/null 2>&1
+    
+    # Install bootloader
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Installing bootloader..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    arch-chroot "$target" grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Browser-OS --recheck || error_exit "Failed to install bootloader"
+    
+    # Configure GRUB
+    cat > "$target/etc/default/grub" << 'EOF'
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="Browser OS"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=0"
+GRUB_CMDLINE_LINUX=""
+GRUB_GFXMODE=auto
+GRUB_GFXPAYLOAD_LINUX=keep
+EOF
+    
+    arch-chroot "$target" grub-mkconfig -o /boot/grub/grub.cfg || error_exit "Failed to configure bootloader"
+    
+    # Generate fstab
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Generating filesystem table..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    genfstab -U "$target" > "$target/etc/fstab"
+    
+    # Setup browser kiosk mode
+    ((current_step++))
+    (echo "XXX"; echo $((current_step * 100 / total_steps)); echo "Configuring browser environment..."; echo "XXX") | dialog --gauge "Installing Browser OS..." 8 50 0
+    
+    mkdir -p "$target/home/$USERNAME/.config/autostart"
+    cat > "$target/home/$USERNAME/.config/autostart/firefox-kiosk.desktop" << EOF
+[Desktop Entry]
+Type=Application
+Name=Firefox Kiosk Mode
+Exec=firefox --kiosk http://localhost/browser-os-config
+Terminal=false
+X-GNOME-Autostart-enabled=true
+EOF
+    arch-chroot "$target" chown -R "$USERNAME:$USERNAME" "/home/$USERNAME/.config"
+    
+    # Cleanup
+    umount -R "$target" 2>/dev/null || true
+    sync
+}
+
+# Function to show completion
+show_completion() {
+    success_message "Browser OS has been successfully installed!\n\nSystem Configuration:\n• Hostname: $HOSTNAME\n• Username: $USERNAME\n• Password: $PASSWORD\n\nYou can now reboot and remove the installation media.\nThe system will boot into Browser OS automatically."
+}
+
+# Main installation flow
+main() {
+    # Initialize dialog
+    export DIALOGRC="$TEMP_DIR/.dialogrc"
+    echo 'use_colors = ON' > "$DIALOGRC"
+    
+    # Check prerequisites
+    check_root
+    check_uefi
+    check_tools
+    
+    # Installation steps
+    welcome_screen
+    
+    local selected_disk
+    selected_disk=$(select_disk)
+    
+    configure_system
+    
+    local disk_prefix
+    disk_prefix=$(partition_disk "$selected_disk")
+    
+    install_system "$disk_prefix"
+    
+    show_completion
+    
+    # Offer to reboot
+    dialog --colors --title "\Z2Installation Complete\Zn" --yesno "\nBrowser OS installation completed successfully!\n\nWould you like to reboot now?" 10 50
+    if [ $? -eq 0 ]; then
+        clear
+        echo "Rebooting system..."
+        reboot
+    else
+        clear
+        echo "Installation complete. Please reboot manually when ready."
+    fi
+}
+
+# Run the installer
+main "$@"

@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# Test launcher for Browser OS installer
+#
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Testing installer requires root privileges."
+    echo "Run: sudo $0"
+    exit 1
+fi
+
+echo "Starting Browser OS Dialog Installer..."
+echo "Press Ctrl+C at any time to cancel."
+sleep 2
+
+/usr/local/bin/browser-os-installer
