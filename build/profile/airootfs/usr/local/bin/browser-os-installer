@@ -68,7 +68,7 @@ check_uefi() {
 # Function to check and install required tools
 check_tools() {
     local missing_tools=()
-    local required_tools=("parted" "mkfs.fat" "mkfs.ext4" "rsync" "arch-chroot" "genfstab" "grub-install" "lsblk")
+    local required_tools=("parted" "mkfs.fat" "mkfs.ext4" "rsync" "arch-chroot" "genfstab" "grub-install" "lsblk" "wipefs")
     
     for tool in "${required_tools[@]}"; do
         if ! command -v "$tool" >/dev/null 2>&1; then
@@ -161,7 +161,7 @@ configure_system() {
 partition_disk() {
     local disk="$1"
     
-    dialog --infobox "Partitioning disk /dev/$disk...\n\nThis may take a few moments." 6 40
+    dialog --infobox "Preparing disk /dev/$disk...\n\nThis may take a few moments." 6 40
     
     # Determine partition prefix
     local part_prefix=""
@@ -169,8 +169,38 @@ partition_disk() {
         part_prefix="p"
     fi
     
+    # Clean up disk before partitioning
+    dialog --infobox "Cleaning up existing partitions on /dev/$disk..." 6 50
+    
+    # Disable any swap on the disk
+    swapoff "/dev/$disk"* 2>/dev/null || true
+    
+    # Unmount any mounted partitions on this disk
+    local mounted_partitions
+    mounted_partitions=$(mount | grep "/dev/$disk" | awk '{print $1}' || true)
+    if [ -n "$mounted_partitions" ]; then
+        for partition in $mounted_partitions; do
+            umount "$partition" 2>/dev/null || true
+        done
+    fi
+    
+    # Clear any filesystem signatures
+    wipefs --all --force "/dev/$disk" 2>/dev/null || true
+    
+    # Wait for operations to complete
+    sync
+    sleep 1
+    
+    dialog --infobox "Creating new partition table on /dev/$disk..." 6 50
+    
     # Create partition table
-    parted --script "/dev/$disk" mklabel gpt || error_exit "Failed to create partition table"
+    if ! parted --script "/dev/$disk" mklabel gpt 2>/tmp/parted_error.log; then
+        local error_details=""
+        if [ -f /tmp/parted_error.log ]; then
+            error_details="\n\nError details: $(cat /tmp/parted_error.log)"
+        fi
+        error_exit "Failed to create partition table on /dev/$disk$error_details"
+    fi
     
     # Create EFI partition (512MB)
     parted --script "/dev/$disk" mkpart primary fat32 1MiB 513MiB || error_exit "Failed to create EFI partition"
