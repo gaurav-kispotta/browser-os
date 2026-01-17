@@ -22,5 +22,8 @@ file_permissions=(
   ["/usr/local/bin/choose-mirror"]="0:0:755"
   ["/usr/local/bin/Installation_guide"]="0:0:755"
   ["/usr/local/bin/livecd-sound"]="0:0:755"
+  ["/usr/local/bin/smooth-transition.sh"]="0:0:755"
+  ["/usr/local/bin/browser-os-debug.sh"]="0:0:755"
+  ["/usr/local/bin/display-watchdog.sh"]="0:0:755"
   ["/etc/skel/.welcome.sh"]="0:0:755"
 )

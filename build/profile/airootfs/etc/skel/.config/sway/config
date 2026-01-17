@@ -21,10 +21,11 @@ set $menu dmenu_path | dmenu | xargs swaymsg exec --
 
 ### Output configuration
 #
-# make the default background white
-output * bg #ffffff solid_color
-# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /etc/skel/.config/sway/background.png center
+# Set a solid black background to ensure smooth transition
+output * bg #000000 solid_color
+# Automatic output detection and configuration
+output * adaptive_sync on
+output * scale 1
 #
 # Example configuration:
 #
@@ -181,5 +182,5 @@ for_window [class="firefox"] fullscreen enable
 # Auto-start services and Firefox
 exec systemctl --user start wireless-scanner.service >/dev/null 2>&1
 
-# Start Firefox in kiosk mode after a short delay to ensure smooth transition
-exec sleep 2 && firefox --kiosk --profile ~/.mozilla/browserOs http://localhost:3000 >/dev/null 2>&1
+# Start Firefox in kiosk mode after ensuring the web server is ready
+exec bash -c 'for i in {1..30}; do if curl -s http://localhost:3000 >/dev/null 2>&1; then firefox --kiosk --profile ~/.mozilla/browserOs http://localhost:3000 >/dev/null 2>&1 & break; fi; sleep 1; done; if [ $i -eq 30 ]; then firefox --kiosk --profile ~/.mozilla/browserOs about:blank >/dev/null 2>&1 & fi'

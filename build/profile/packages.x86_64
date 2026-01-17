@@ -67,5 +67,15 @@ plymouth
 # Firefox browser
 firefox
 
+# GPU drivers and display support
+mesa
+xf86-video-intel
+xf86-video-amdgpu
+xf86-video-nouveau
+vulkan-intel
+vulkan-radeon
+libva-intel-driver
+libva-mesa-driver
+
 # Additional utilities for kiosk mode
 unclutter

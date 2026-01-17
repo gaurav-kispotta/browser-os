@@ -1,0 +1,14 @@
+[Unit]
+Description=Browser OS Display Watchdog
+After=smooth-transition.service
+Requires=smooth-transition.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/display-watchdog.sh
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=graphical.target
