@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  browser-os-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - TARGETARCH=amd64
+    platform: linux/amd64
+    container_name: browser-os-build
+    privileged: true
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    environment:
+      - TERM=xterm-256color
+    command: /bin/bash
+    networks:
+      - browser-os-network
+
+networks:
+  browser-os-network:
+    driver: bridge

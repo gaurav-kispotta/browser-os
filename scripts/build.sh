@@ -51,6 +51,19 @@ build_iso() {
       exit 1
     fi
 
+    # Initialize and populate keyring
+    echo "Initializing pacman keyring..."
+    pacman-key --init
+    pacman-key --populate archlinux
+    
+    # Sync package database before building
+    echo "Syncing package databases..."
+    pacman -Syy --noconfirm
+    
+    # Clean package cache and refresh databases
+    echo "Cleaning package cache..."
+    pacman -Sc --noconfirm || true
+
     # Check for required commands
     for cmd in mkarchiso mksquashfs; do
       if ! command -v $cmd &> /dev/null; then
