@@ -51,6 +51,12 @@ build_iso() {
       exit 1
     fi
 
+    # Disable sandbox for Docker environment
+    echo "Configuring pacman for Docker environment..."
+    if ! grep -q "DisableSandbox" /etc/pacman.conf; then
+        sed -i '/\[options\]/a DisableSandbox' /etc/pacman.conf
+    fi
+
     # Initialize and populate keyring
     echo "Initializing pacman keyring..."
     pacman-key --init
