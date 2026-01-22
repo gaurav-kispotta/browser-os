@@ -92,13 +92,32 @@ log "Preparing display environment"
 # Start Sway as BROWSER_OS user with proper environment
 log "Starting Sway window manager"
 
+# Detect if we're in a VM and set appropriate rendering
+if systemd-detect-virt -q || grep -q "QEMU\|VirtualBox\|VMware" /proc/cpuinfo 2>/dev/null; then
+    log "VM environment detected, using software rendering"
+    WLR_RENDERER="pixman"
+    WLR_BACKENDS="drm,libinput"
+else
+    log "Physical hardware detected"
+    WLR_RENDERER="auto"
+    WLR_BACKENDS="drm,libinput"
+fi
+
+# Ensure DRM device exists
+if [ ! -e /dev/dri/card0 ]; then
+    log "WARNING: No DRM device found, trying to load modules"
+    modprobe -a drm bochs virtio-gpu qxl >/dev/null 2>&1 || true
+    sleep 1
+fi
+
 # Use systemd-run to start Sway with proper session management
 systemd-run --uid=BROWSER_OS --gid=BROWSER_OS \
     --setenv=XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
     --setenv=HOME=/home/BROWSER_OS \
     --setenv=USER=BROWSER_OS \
     --setenv=WLR_NO_HARDWARE_CURSORS=1 \
-    --setenv=WLR_BACKENDS=drm,libinput \
+    --setenv=WLR_RENDERER="$WLR_RENDERER" \
+    --setenv=WLR_BACKENDS="$WLR_BACKENDS" \
     --service-type=notify \
     --slice=user-$BROWSER_OS_UID.slice \
     --unit=sway-session \

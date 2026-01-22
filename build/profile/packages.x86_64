@@ -72,10 +72,16 @@ mesa
 xf86-video-intel
 xf86-video-amdgpu
 xf86-video-nouveau
+xf86-video-fbdev
+xf86-video-vesa
 vulkan-intel
 vulkan-radeon
 libva-intel-driver
 libva-mesa-driver
+
+# Virtual machine graphics support
+xf86-video-qxl
+qemu-guest-agent
 
 # Additional utilities for kiosk mode
 unclutter
