@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "register-browser-agent": "curl -X POST http://192.168.1.2:3000/api/register-browser -o browser-agent-token.json || true",
+    "register-browser-agent": "curl --connect-timeout 5 --max-time 10 -X POST http://192.168.1.2:3000/api/register-browser -o browser-agent-token.json || true",
     "dev": "npm run register-browser-agent; cp .env.production .env && next dev --turbopack",
     "dev:test": "npm run register-browser-agent; cp .env.test .env && next dev --turbopack",
     "build": "next build",

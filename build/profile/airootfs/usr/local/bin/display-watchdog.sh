@@ -14,17 +14,13 @@ while true; do
     
     # Check if Sway is running
     if ! pgrep -x sway >/dev/null 2>&1; then
-        log "Sway not running, attempting restart..."
+        log "Sway not running, starting..."
         
-        # Try to restart the smooth transition
-        systemctl restart smooth-transition.service || true
+        # Start Sway manually
+        runuser -l BROWSER_OS -c 'XDG_RUNTIME_DIR="/run/user/$(id -u)" sway' >/dev/null 2>&1 &
+        
+        # Wait a bit for it to come up
         sleep 5
-        
-        # If still not running, start manually
-        if ! pgrep -x sway >/dev/null 2>&1; then
-            log "Manual Sway restart..."
-            runuser -l BROWSER_OS -c 'XDG_RUNTIME_DIR="/run/user/$(id -u)" sway' >/dev/null 2>&1 &
-        fi
     fi
     
     # Check if Firefox is running

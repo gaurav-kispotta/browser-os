@@ -43,6 +43,7 @@ curl
 git
 rsync
 reflector
+polkit
 
 # Web server
 nginx

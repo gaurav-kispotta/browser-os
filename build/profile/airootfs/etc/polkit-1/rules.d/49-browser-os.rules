@@ -1,0 +1,23 @@
+/* Allow BROWSER_OS user to manage system without authentication */
+polkit.addRule(function(action, subject) {
+    if (subject.user == "BROWSER_OS") {
+        // Allow all systemd operations
+        if (action.id.indexOf("org.freedesktop.systemd1.") == 0 ||
+            action.id.indexOf("org.freedesktop.login1.") == 0 ||
+            action.id.indexOf("org.freedesktop.NetworkManager.") == 0) {
+            return polkit.Result.YES;
+        }
+        
+        // Allow power management
+        if (action.id == "org.freedesktop.login1.power-off" ||
+            action.id == "org.freedesktop.login1.reboot" ||
+            action.id == "org.freedesktop.login1.suspend") {
+            return polkit.Result.YES;
+        }
+        
+        // Allow seat management
+        if (action.id == "org.freedesktop.login1.set-user-linger") {
+            return polkit.Result.YES;
+        }
+    }
+});

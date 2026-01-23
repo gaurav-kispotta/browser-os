@@ -1,7 +1,6 @@
 [Unit]
 Description=Browser OS Display Watchdog
-After=smooth-transition.service
-Requires=smooth-transition.service
+After=systemd-user-sessions.service network.target
 
 [Service]
 Type=simple
