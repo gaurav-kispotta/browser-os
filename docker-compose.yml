@@ -15,7 +15,11 @@ services:
       - TERM=xterm-256color
     volumes:
       - ./output:/workspace/output
-    command: /bin/bash
+      - .:/workspace:cached
+      - /workspace/build/work
+    ports:
+      - "2222:22"
+    command: /bin/bash -c "/usr/sbin/sshd -D"
     networks:
       - browser-os-network
 
