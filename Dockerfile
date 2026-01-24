@@ -59,7 +59,21 @@ RUN pacman -S --noconfirm --needed \
     nano \
     bash-completion \
     reflector \
-    ncurses
+    ncurses \
+    tmux \
+    screen \
+    less \
+    man-db \
+    man-pages \
+    util-linux \
+    procps-ng \
+    which \
+    tree \
+    htop
+
+# Generate locale
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen
 
 # Ensure proper /dev/pts configuration for PTY support
 RUN mkdir -p /dev/pts && chmod 755 /dev/pts
